@@ -1,0 +1,10 @@
+var ALIASES = {};
+ALIASES["aho_corasick"] = {};
+ALIASES["cfg_if"] = {};
+ALIASES["encoding_rs"] = {};
+ALIASES["lazy_static"] = {};
+ALIASES["memchr"] = {};
+ALIASES["regex"] = {};
+ALIASES["regex_syntax"] = {};
+ALIASES["thread_local"] = {};
+ALIASES["unidiff"] = {};
