@@ -384,7 +384,7 @@ impl PatchedFile {
             .unwrap();
         let source_length = header_info
             .name("source_length")
-            .map_or("0", |s| s.as_str())
+            .map_or("1", |s| s.as_str())
             .parse::<usize>()
             .unwrap();
         let target_start = header_info
@@ -394,7 +394,7 @@ impl PatchedFile {
             .unwrap();
         let target_length = header_info
             .name("target_length")
-            .map_or("0", |s| s.as_str())
+            .map_or("1", |s| s.as_str())
             .parse::<usize>()
             .unwrap();
         let section_header = header_info
