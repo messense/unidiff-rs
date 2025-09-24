@@ -9,7 +9,7 @@ license = "MIT"
 name = "unidiff"
 readme = "README.md"
 repository = "https://github.com/messense/unidiff-rs"
-version = "0.3.4"
+version = "0.4.0"
 
 [dependencies]
 regex = "1.0"
@@ -17,5 +17,5 @@ encoding_rs = { version = "0.8", optional = true }
 
 [features]
 default = ["encoding"]
-encoding = ["encoding_rs"]
+encoding = ["dep:encoding_rs"]
 unstable = []

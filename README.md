@@ -12,10 +12,8 @@ Add it to your ``Cargo.toml``:
 
 ```toml
 [dependencies]
-unidiff = "0.3"
+unidiff = "0.4"
 ```
-
-Add ``extern crate unidiff`` to your crate root and your're good to go!
 
 ## License
 
