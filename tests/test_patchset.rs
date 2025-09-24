@@ -342,6 +342,13 @@ fn test_single_line_diff() {
         assert_eq!("sample.txt", added_files[0].path());
         assert_eq!(1, added_files[0].added());
         assert_eq!(0, added_files[0].removed());
+
+        let hunks = added_files[0].hunks();
+        assert_eq!(1, hunks.len());
+        assert_eq!(0, hunks[0].source_start);
+        assert_eq!(0, hunks[0].source_length);
+        assert_eq!(1, hunks[0].target_start);
+        assert_eq!(1, hunks[0].target_length);
     }
     {
         let buf = include_str!("fixtures/sample5.diff");
