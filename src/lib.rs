@@ -22,21 +22,25 @@
 //!     patch.parse(diff_str).ok().expect("Error parsing diff");
 //! }
 //! ```
-use lazy_static::lazy_static;
-
 use std::error;
 use std::fmt;
 use std::ops::{Index, IndexMut};
 use std::str::FromStr;
+use std::sync::LazyLock;
 
 use regex::Regex;
 
-lazy_static! {
-    static ref RE_SOURCE_FILENAME: Regex = Regex::new(r"^--- (?P<filename>[^\t\n]+)(?:\t(?P<timestamp>[^\n]+))?").unwrap();
-    static ref RE_TARGET_FILENAME: Regex = Regex::new(r"^\+\+\+ (?P<filename>[^\t\n]+)(?:\t(?P<timestamp>[^\n]+))?").unwrap();
-    static ref RE_HUNK_HEADER: Regex = Regex::new(r"^@@ -(?P<source_start>\d+)(?:,(?P<source_length>\d+))? \+(?P<target_start>\d+)(?:,(?P<target_length>\d+))? @@[ ]?(?P<section_header>.*)").unwrap();
-    static ref RE_HUNK_BODY_LINE: Regex = Regex::new(r"^(?P<line_type>[- \n\+\\]?)(?P<value>.*)").unwrap();
-}
+static RE_SOURCE_FILENAME: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^--- (?P<filename>[^\t\n]+)(?:\t(?P<timestamp>[^\n]+))?").unwrap()
+});
+static RE_TARGET_FILENAME: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^\+\+\+ (?P<filename>[^\t\n]+)(?:\t(?P<timestamp>[^\n]+))?").unwrap()
+});
+static RE_HUNK_HEADER: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^@@ -(?P<source_start>\d+)(?:,(?P<source_length>\d+))? \+(?P<target_start>\d+)(?:,(?P<target_length>\d+))? @@[ ]?(?P<section_header>.*)").unwrap()
+});
+static RE_HUNK_BODY_LINE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?P<line_type>[- \n\+\\]?)(?P<value>.*)").unwrap());
 
 /// Diff line is added
 pub const LINE_TYPE_ADDED: &'static str = "+";

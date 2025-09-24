@@ -2,7 +2,7 @@
 authors = ["messense <messense@icloud.com>"]
 description = "Unified diff parsing/metadata extraction library for Rust"
 documentation = "https://messense.github.io/unidiff-rs"
-edition = "2018"
+edition = "2024"
 homepage = "https://github.com/messense/unidiff-rs"
 keywords = ["diff", "git", "svn", "hg", "unified"]
 license = "MIT"
@@ -12,7 +12,6 @@ repository = "https://github.com/messense/unidiff-rs"
 version = "0.3.4"
 
 [dependencies]
-lazy_static = "1.0"
 regex = "1.0"
 encoding_rs = { version = "0.8", optional = true }
 
