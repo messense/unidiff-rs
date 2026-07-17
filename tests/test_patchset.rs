@@ -401,3 +401,74 @@ fn test_parse_patchset_from_str() {
     // three hunks
     assert_eq!(3, patch[0].len());
 }
+
+#[test]
+fn test_parse_removed_line_starting_with_dashes_is_not_a_source_header() {
+    // Deleting a line that starts with `--` (e.g. a Lua/SQL/Haskell comment) is
+    // rendered as `--- <rest>` in the patch. It must be parsed as a removed line
+    // of the current hunk, not as a `--- a/file` source file header, even when
+    // another hunk follows in the same file.
+    let buf = "diff --git a/t.lua b/t.lua
+index fe41812..71c5a8f 100644
+--- a/t.lua
++++ b/t.lua
+@@ -1 +1 @@
+--- old comment
++-- new comment
+@@ -6 +6 @@ local d = 4
+-x = 1
++x = 2
+";
+
+    let mut patch = PatchSet::new();
+    patch.parse(buf).unwrap();
+
+    assert_eq!(1, patch.len());
+    assert_eq!("t.lua", patch[0].path());
+    assert_eq!(2, patch[0].len());
+
+    let removed_lines: Vec<String> = patch[0][0]
+        .lines()
+        .iter()
+        .filter(|line| line.is_removed())
+        .map(|line| line.value.clone())
+        .collect();
+    assert_eq!(vec!["-- old comment".to_string()], removed_lines);
+
+    assert_eq!(6, patch[0][1].source_start);
+    assert_eq!(1, patch[0][1].added());
+    assert_eq!(1, patch[0][1].removed());
+}
+
+#[test]
+fn test_parse_added_line_starting_with_pluses_is_not_a_target_header() {
+    // Adding a line that starts with `++` is rendered as `+++ <rest>` in the
+    // patch. It must be parsed as an added line of the current hunk, not as a
+    // `+++ b/file` target file header.
+    let buf = "diff --git a/t.txt b/t.txt
+index fe41812..71c5a8f 100644
+--- a/t.txt
++++ b/t.txt
+@@ -1 +1 @@
+-++ old
++++ new
+@@ -6 +6 @@
+-x = 1
++x = 2
+";
+
+    let mut patch = PatchSet::new();
+    patch.parse(buf).unwrap();
+
+    assert_eq!(1, patch.len());
+    assert_eq!("t.txt", patch[0].path());
+    assert_eq!(2, patch[0].len());
+
+    let added_lines: Vec<String> = patch[0][0]
+        .lines()
+        .iter()
+        .filter(|line| line.is_added())
+        .map(|line| line.value.clone())
+        .collect();
+    assert_eq!(vec!["++ new".to_string()], added_lines);
+}
