@@ -379,7 +379,8 @@ impl PatchedFile {
         !self.is_added_file() && !self.is_removed_file()
     }
 
-    fn parse_hunk(&mut self, header: &str, diff: &[(usize, &str)]) -> Result<()> {
+    /// Parses a hunk and returns the number of lines it consumed from `diff`.
+    fn parse_hunk(&mut self, header: &str, diff: &[(usize, &str)]) -> Result<usize> {
         let header_info = RE_HUNK_HEADER.captures(header).unwrap();
         let source_start = header_info
             .name("source_start")
@@ -420,7 +421,9 @@ impl PatchedFile {
         let mut target_line_no = target_start;
         let expected_source_end = source_start + source_length;
         let expected_target_end = target_start + target_length;
+        let mut consumed = 0usize;
         for &(diff_line_no, line) in diff {
+            consumed += 1;
             if let Some(valid_line) = RE_HUNK_BODY_LINE.captures(line) {
                 let mut line_type = valid_line.name("line_type").unwrap().as_str();
                 if line_type == LINE_TYPE_EMPTY || line_type == "" {
@@ -461,7 +464,7 @@ impl PatchedFile {
             }
         }
         self.hunks.push(hunk);
-        Ok(())
+        Ok(consumed)
     }
 
     /// Count of hunks
@@ -629,7 +632,9 @@ impl PatchSet {
         let mut source_file: Option<String> = None;
         let mut source_timestamp: Option<String> = None;
 
-        for &(line_no, line) in &diff {
+        let mut line_no = 0;
+        while line_no < diff.len() {
+            let line = diff[line_no].1;
             // check for source file header
             if let Some(captures) = RE_SOURCE_FILENAME.captures(line) {
                 source_file = match captures.name("filename") {
@@ -644,6 +649,7 @@ impl PatchSet {
                     self.files.push(patched_file.clone());
                     current_file = None;
                 }
+                line_no += 1;
                 continue;
             }
             // check for target file header
@@ -668,16 +674,22 @@ impl PatchSet {
                     target_timestamp: target_timestamp.clone(),
                     hunks: Vec::new(),
                 });
+                line_no += 1;
                 continue;
             }
             // check for hunk header
             if RE_HUNK_HEADER.is_match(line) {
                 if let Some(ref mut patched_file) = current_file {
-                    patched_file.parse_hunk(line, &diff[line_no + 1..])?;
+                    // Skip the lines consumed by the hunk so that its body is not
+                    // mistaken for file headers or hunk headers: e.g. a removed line
+                    // starting with `--` is rendered as `--- <rest>`, which is
+                    // indistinguishable from a source file header by content alone.
+                    line_no += patched_file.parse_hunk(line, &diff[line_no + 1..])?;
                 } else {
                     return Err(Error::UnexpectedHunk(line.to_owned()));
                 }
             }
+            line_no += 1;
         }
         if let Some(patched_file) = current_file {
             self.files.push(patched_file.clone());
